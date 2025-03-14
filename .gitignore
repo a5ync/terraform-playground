@@ -1,0 +1,3 @@
+nginx/.terraform.lock.hcl
+nginx/.terraform/providers/
+.vscode/settings.json
