@@ -27,69 +27,10 @@ resource "google_compute_instance" "nginx_vm" {
   }
 
   metadata = {
-    ssh-keys = "async:${file("~/.ssh/id_ap8.pub")}"
+    ssh-keys = "${var.ssh_user}:${file("~/.ssh/id_ap8.pub")}"
   }
 
-  metadata_startup_script = <<-EOF
-    #!/bin/bash
-    sudo apt update -y
-    sudo apt install -y nginx certbot python3-certbot-nginx openssl ufw
-
-    # Enable UFW firewall
-    sudo ufw allow ssh
-    sudo ufw allow https
-    sudo ufw enable -y
-
-    # Start Nginx
-    sudo systemctl start nginx
-    sudo systemctl enable nginx
-
-    # Create a default web page
-    echo "<h1>Hello, World from Nginx with HTTPS!</h1>" | sudo tee /var/www/html/index.html
-
-    # Check if a domain is set for Let's Encrypt
-    DOMAIN="your-domain.com"
-    if [[ "$DOMAIN" != "your-domain.com" ]]; then
-        # Request a real SSL certificate from Let's Encrypt
-        sudo certbot --nginx -n --agree-tos --email your-email@example.com -d $DOMAIN
-        CERT_PATH="/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
-        KEY_PATH="/etc/letsencrypt/live/$DOMAIN/privkey.pem"
-    else
-        # Generate a self-signed SSL certificate if no domain is available
-        sudo mkdir -p /etc/nginx/ssl
-        sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-          -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt \
-          -subj "/C=US/ST=Example/L=City/O=Company/OU=IT/CN=$(hostname -I | awk '{print $1}')"
-        CERT_PATH="/etc/nginx/ssl/nginx.crt"
-        KEY_PATH="/etc/nginx/ssl/nginx.key"
-    fi
-
-    # Configure Nginx for HTTPS and force redirect from HTTP to HTTPS
-    sudo bash -c "cat > /etc/nginx/sites-available/default" <<EOF2
-    server {
-        listen 80;
-        server_name _;
-        return 301 https://\$host\$request_uri;
-    }
-
-    server {
-        listen 443 ssl;
-        listen [::]:443 ssl;
-        server_name _;
-
-        ssl_certificate $CERT_PATH;
-        ssl_certificate_key $KEY_PATH;
-
-        location / {
-            root /var/www/html;
-            index index.html;
-        }
-    }
-    EOF2
-
-    # Restart Nginx to apply changes
-    sudo systemctl restart nginx
-  EOF
+  metadata_startup_script = file("${path.module}/scripts/startup.sh")
 
   tags = ["https-server"]
 }
@@ -130,7 +71,7 @@ output "instance_public_ip" {
 
 output "ssh_command" {
   description = "SSH command to connect to the instance"
-  value       = "ssh -i ~/.ssh/id_ap8 async@${google_compute_instance.nginx_vm.network_interface[0].access_config[0].nat_ip}"
+  value       = "ssh -i ~/.ssh/id_ap8 ${var.ssh_user}@${google_compute_instance.nginx_vm.network_interface[0].access_config[0].nat_ip}"
 }
 
 output "https_url" {

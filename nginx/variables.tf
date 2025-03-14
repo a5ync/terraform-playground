@@ -17,3 +17,9 @@ variable "my_ip" {
   description = "Your public IP for firewall rules"
   type        = string
 }
+
+variable "ssh_user" {
+  description = "SSH username"
+  type        = string
+  default     = "async"
+}
