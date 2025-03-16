@@ -2,6 +2,11 @@
 sudo apt update -y
 sudo apt install -y nginx certbot python3-certbot-nginx openssl ufw
 
+# Install Ops Agent
+curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
+sudo bash add-google-cloud-ops-agent-repo.sh --also-install
+sudo systemctl restart google-cloud-ops-agent
+
 # Enable UFW firewall
 sudo ufw allow ssh
 sudo ufw allow https
