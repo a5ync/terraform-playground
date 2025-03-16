@@ -18,7 +18,7 @@ terraform output ssh_command # Connect via SSH using the provided output:
 - **Service Account**: Creates a dedicated service account (`ops-agent-sa`) with permissions to:
   - Write logs to Cloud Logging (`roles/logging.logWriter`)
   - Write metrics to Cloud Monitoring (`roles/monitoring.metricWriter`)
-- **Compute Engine VM**: 
+- **Compute Engine VM**:
   - Deploys a `e2-micro` instance running Debian 11.
   - Attaches the service account with limited scopes.
   - Executes a startup script (`startup.sh`) to bootstrap Nginx.
